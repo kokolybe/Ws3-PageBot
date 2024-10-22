@@ -79,39 +79,3 @@ app.post('/webhook', async (req, res) => {
     res.status(404).send("404_NOTFOUND");
   }
 });
-
-async function post() {
-  console.log("Auto 1 Hour Post Enabled");
-  const autoPost = cron.schedule(`0 */1 * * *`, async () => {
-    const {
-      content,
-      author
-    } = (await axios.get(`https://api.realinspire.tech/v1/quotes/random`)).data[0];
-    await api.publishPost(`💭 Remember...
-${content}
--${author}
-`, PAGE_ACCESS_TOKEN);
-    console.log("Triggered autopost.");
-  }, {
-    scheduled: true,
-    timezone: "Asia/Manila"
-  });
-  autoPost.start();
-}
-
-app.listen(PORT, async () => {
-  console.log(`Server is running on port ${PORT}`);
-  await api.loadCommands();
-  post();
-  const rsFile = api.temp + "/restart";
-  if (fs.existsSync(rsFile)) {
-    const rsConf = JSON.parse(fs.readFileSync(rsFile, "utf-8")) || {};
-    api.sendMessage(rsConf.restartId, {
-      text: `Restarted successfully!\nRestart time: ${(Date.now() - rsConf.time) / 1000} seconds`
-    }, PAGE_ACCESS_TOKEN);
-    fs.unlinkSync(rsFile);
-    console.log("Successfully restarted");
-  }
-});
-
-process.on("unhandledRejection", reason => console.log(reason));
